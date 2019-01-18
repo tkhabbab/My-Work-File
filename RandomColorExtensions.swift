@@ -17,3 +17,6 @@ extension UIColor {
         return UIColor(red: randomFloat(), green: randomFloat(), blue: randomFloat(), alpha: 1)
     }
 }
+
+
+// For use     image.backgroundColor = .randomColor 
