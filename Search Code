@@ -1,0 +1,132 @@
+
+import UIKit
+import SwiftyJSON
+import Alamofire
+import MBProgressHUD
+
+class HomeVC: UIViewController , UITableViewDelegate , UITableViewDataSource, UISearchBarDelegate {
+    var isSearch : Bool = false
+    @IBOutlet weak var searchtxt: UISearchBar!
+    @IBOutlet weak var allpost: UITableView!
+    var allpostdata = [allpostModel]()
+    var searchData = [allpostModel]()
+    var arrFilter = [allpostModel]()
+    var catagoryfil = [allpostModel]()
+    var derc = [allpostModel]()
+    var selectedCatagory = ""
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        allpost.dataSource = self
+        allpost.delegate = self
+        searchtxt.delegate = self
+        searchtxt.showsScopeBar = false
+        allpostdd()
+
+    }
+    
+    @IBAction func filterbtn(_ sender: Any) {
+        selectedCatagory = " "
+        derc = allpostdata
+        print("This is\(allpostdata.count)")
+        if let discountDetailsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "FilterView") as? FilterView{
+            discountDetailsVC.allfilt = allpostdata
+            present(discountDetailsVC, animated: true, completion: nil)
+        }
+        self.allpost.reloadData()
+        self.viewDidLoad()
+        
+    }
+    
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            return arrFilter.count
+       // return 4
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = allpost.dequeueReusableCell(withIdentifier: "allpostcell", for: indexPath) as! allpostcell
+            cell.catagorylbl.text = arrFilter[indexPath.row].id
+            cell.taglbl.text = arrFilter[indexPath.row].fonte
+            cell.discriptionlbl.text = arrFilter[indexPath.row].tags
+            cell.datelbl.text = arrFilter[indexPath.row].descrizion
+            cell.selectionStyle = UITableViewCell.SelectionStyle.none
+            cell.backgroundColor = .clear
+        return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let discountDetailsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DetailsViewCon") as? DetailsViewCon{
+            if selectedCatagory == "y"{
+                discountDetailsVC.allposttdetail = catagoryfil[indexPath.row]
+            }else{
+                discountDetailsVC.allposttdetail = allpostdata[indexPath.row]
+            }
+            
+            present(discountDetailsVC, animated: true, completion: nil)
+        }
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+      guard !searchText.isEmpty  else { arrFilter = allpostdata ; return }
+            arrFilter = allpostdata.filter({ user -> Bool in
+                return user.descrizion!.lowercased().contains(searchText.lowercased())
+            })
+            self.allpost.reloadData()
+    }
+    
+    
+    func allpostdd(){
+        let progressHUD = MBProgressHUD.showAdded(to: self.view, animated: true)
+        progressHUD.label.text = "Loading Your Data......"
+        Alamofire.request(Api.ALL_POST, method: .get, encoding: JSONEncoding.default)
+            .responseJSON { response in
+                switch response.result {
+                case .success(let json):
+                    print(json)
+                        if let object = json as? [Any] {
+                            // json is an array
+                            print(object)
+                            let discounts = object as! [[String:AnyObject]]
+                            for var discount in discounts{
+                                let Fonte = discount["Fonte"] as! String
+                                let Categoria = discount["Categoria"] as? String ?? ""
+                                let TAGs = discount["TAGs"] as! String
+                                let PDF = discount["PDF"] as! String
+                                let Published = discount["Published"] as! String
+                                let id =  discount["ID"] as! String
+                                let Descrizione =  discount["Descrizione"] as? String ?? ""
+                                let Data = discount["Data"] as! String
+                                let MultImg = discount["MultImg"] as! String
+                                var imageUrl: String?
+                                if let imgUrl = discount["Img"] as? String {
+                                    imageUrl = imgUrl
+                                }
+                                else{
+                                    imageUrl = ""
+                                }
+                                self.allpostdata.append(allpostModel(id: id, ffonte: Fonte, ccategori: Categoria, ttags: TAGs, ddescrizion: Descrizione, ddate: Data, iimage: imageUrl!, mmultiimg: MultImg, ppdf: PDF, ppublish: Published))
+                                self.arrFilter = self.allpostdata
+                                DispatchQueue.main.async {
+                                    MBProgressHUD.hide(for: self.view, animated: false)
+                                     self.allpost.reloadData()
+                                }
+                            }
+                            DispatchQueue.main.async {
+                                MBProgressHUD.hide(for: self.view, animated: false)
+                                self.allpost.reloadData()
+                            }
+                        }
+                case .failure(let error):
+                     MBProgressHUD.hide(for: self.view, animated: false)
+                     self.presentAlert(withTitle: "internet Problem", message: "Please check your internet connection")
+                    print(error)
+                }
+        }
+    }
+}
+extension String {
+    func trimWhiteSpace() -> String {
+        let string = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        return string
+    }
+}
