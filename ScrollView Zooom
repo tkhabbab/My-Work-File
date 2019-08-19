@@ -1,0 +1,32 @@
+@IBOutlet weak var scrolView: UIScrollView!
+       scrolView.maximumZoomScale = 4
+       scrolView.minimumZoomScale = 1
+       scrolView.delegate = self
+       
+extension DetailsViewCon: UIScrollViewDelegate {
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+        return featuredImage
+    }
+
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        if scrollView.zoomScale > 1 {
+            if let image = featuredImage.image {
+                let ratioW = featuredImage.frame.width / image.size.width
+                let ratioH = featuredImage.frame.height / image.size.height
+
+                let ratio = ratioW < ratioH ? ratioW : ratioH
+                let newWidth = image.size.width * ratio
+                let newHeight = image.size.height * ratio
+                let conditionLeft = newWidth*scrollView.zoomScale > featuredImage.frame.width
+                let left = 0.5 * (conditionLeft ? newWidth - featuredImage.frame.width : (scrollView.frame.width - scrollView.contentSize.width))
+                let conditioTop = newHeight*scrollView.zoomScale > featuredImage.frame.height
+
+                let top = 0.5 * (conditioTop ? newHeight - featuredImage.frame.height : (scrollView.frame.height - scrollView.contentSize.height))
+                scrollView.contentInset = UIEdgeInsets(top: top, left: left, bottom: top, right: left)
+
+            }
+        } else {
+            scrollView.contentInset = .zero
+        }
+    }
+}
