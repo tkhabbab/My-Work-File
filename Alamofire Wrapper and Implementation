@@ -1,0 +1,138 @@
+class AlamofireWrapper: NSObject {
+    class func requestGETURL(_ strURL: String, success:@escaping (JSON) -> Void, failure:@escaping (Error) -> Void) {
+        Alamofire.request(strURL).responseJSON { (responseObject) -> Void in
+            
+            print(responseObject)
+            
+            if responseObject.result.isSuccess {
+                let resJson = JSON(responseObject.result.value!)
+                success(resJson)
+            }
+            if responseObject.result.isFailure {
+                let error : Error = responseObject.result.error!
+                failure(error)
+            }
+        }
+    }
+    
+    class func requestPOSTURL(_ strURL : String, params : [String : AnyObject]?, headers : [String : String]?, success:@escaping (JSON) -> Void, failure:@escaping (Error) -> Void){
+        
+        Alamofire.request(strURL, method: .post, parameters: params, encoding: JSONEncoding.default, headers: headers).responseJSON { (responseObject) -> Void in
+            
+            print(responseObject)
+            
+            if responseObject.result.isSuccess {
+                let resJson = JSON(responseObject.result.value!)
+                success(resJson)
+            }
+            if responseObject.result.isFailure {
+                let error : Error = responseObject.result.error!
+                failure(error)
+            }
+        }
+    }
+}
+
+
+//////                USERS Alamofire /////
+
+./////////                uses
+
+  
+        let parameters: [String : AnyObject]? = [ApiParams.KEY_SECRET: ApiParams.VALUE_SECRET as AnyObject]
+        
+        AlamofireWrapper.requestPOSTURL(Api.PRODUCTS, params: parameters , headers: nil,
+                                        success: {(JSONResponse) -> Void in
+                                            
+            if let resDataArray = JSONResponse.arrayObject {
+                
+                let menus = resDataArray as! [[String:AnyObject]]
+                
+                for var subMenu in menus{
+                    
+                    let subMenus1 = subMenu["submenu"] as! [[String:AnyObject]]
+                    
+                    for var subMenu1 in subMenus1{
+                        
+                        let menuId = subMenu1["id"] as! Int
+                        let menuName = subMenu1["name"] as! String
+                        let menuHierarchy = subMenu1["hierarchy"] as! String
+                        let menuParent = subMenu1["parent"] as! String
+                        let menuSequence = subMenu1["sequence"] as! String
+                        //let subMenus2 = subMenu1["submenu"] as! [[String:AnyObject]]
+                        let imageUrl = subMenu1["image"] as! String
+                        
+                        
+                        self.menuList.append(ProductMenu(id: menuId, name: menuName, hierarchy: menuHierarchy,parent: menuParent, sequence: menuSequence, imageUrl: imageUrl))
+                        
+                    }
+                    
+                    // reload table view
+                    self.collectionViewProduct.reloadData()
+              
+                }
+            }
+        })
+        {
+            (error) -> Void in
+            print(error)
+          
+        }
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+import Foundation
+
+class ProductMenu{
+    var id: Int?
+    var name: String?
+    var hierarchy: String?
+    var parent: String?
+    var sequence: String?
+    var imageUrl: String?
+    
+    init() {
+    }
+    
+    init(id: Int, name: String, hierarchy: String, parent: String, sequence: String, imageUrl: String) {
+        self.id = id
+        self.name = name
+        self.hierarchy = hierarchy
+        self.parent = parent
+        self.sequence = sequence
+        self.imageUrl = imageUrl
+    }
+}
+
+
+
+
+
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
