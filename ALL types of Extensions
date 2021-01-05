@@ -1,0 +1,478 @@
+//
+//  AllExtention.swift
+//  Ticketbari
+//
+//  Created by Khabbab on 24/4/20.
+//  Copyright © 2020 tkhabbab.com. All rights reserved.
+//
+
+
+import UIKit
+class AllExtention: UIViewController{
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+    }
+
+}
+extension UIColor {
+    public convenience init?(hex: String) {
+        let r, g, b, a: CGFloat
+        
+        if hex.hasPrefix("#") {
+            let start = hex.index(hex.startIndex, offsetBy: 1)
+            let hexColor = String(hex[start...])
+            
+            if hexColor.count == 8 {
+                let scanner = Scanner(string: hexColor)
+                var hexNumber: UInt64 = 0
+                
+                if scanner.scanHexInt64(&hexNumber) {
+                    r = CGFloat((hexNumber & 0xff000000) >> 24) / 255
+                    g = CGFloat((hexNumber & 0x00ff0000) >> 16) / 255
+                    b = CGFloat((hexNumber & 0x0000ff00) >> 8) / 255
+                    a = CGFloat(hexNumber & 0x000000ff) / 255
+                    
+                    self.init(red: r, green: g, blue: b, alpha: a)
+                    return
+                }
+            }
+        }
+        
+        return nil
+    }
+}
+
+
+extension UIViewController {
+    
+    func presentAlert(withTitle title: String, message : String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let OKAction = UIAlertAction(title: "OK", style: .default) { action in
+        }
+        alertController.addAction(OKAction)
+        self.present(alertController, animated: true, completion: nil)
+    }
+}
+
+extension UIViewController {
+    
+    func presentAlertWithTitle(title: String, message: String, options: String..., completion: @escaping (Int) -> Void) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        for (index, option) in options.enumerated() {
+            alertController.addAction(UIAlertAction.init(title: option, style: .default, handler: { (action) in
+                completion(index)
+            }))
+        }
+        self.present(alertController, animated: true, completion: nil)
+    }
+}
+
+
+func currenttime(dateFormatSTR:String) -> String{
+    let dateFormatter : DateFormatter = DateFormatter()
+    dateFormatter.dateFormat = dateFormatSTR //"yyyy-MM-dd HH:mm:ss"
+    
+    let date = Date()
+    let dateString = dateFormatter.string(from: date)
+    return (dateString)
+}
+
+extension Array where Element: Equatable {
+    
+    public func uniq() -> [Element] {
+        var arrayCopy = self
+        arrayCopy.uniqInPlace()
+        return arrayCopy
+    }
+    
+    mutating public func uniqInPlace() {
+        var seen = [Element]()
+        var index = 0
+        for element in self {
+            if seen.contains(element) {
+                remove(at: index)
+                // removeAtIndex(index)
+            } else {
+                seen.append(element)
+                index += 1
+            }
+        }
+    }
+}
+extension UISegmentedControl {
+    
+    func setTitleColor(_ color: UIColor, state: UIControl.State = .normal) {
+        var attributes = self.titleTextAttributes(for: state) ?? [:]
+        attributes[.foregroundColor] = color
+        self.setTitleTextAttributes(attributes, for: state)
+    }
+    
+    func setTitleFont(_ font: UIFont, state: UIControl.State = .normal) {
+        var attributes = self.titleTextAttributes(for: state) ?? [:]
+        attributes[.font] = font
+        self.setTitleTextAttributes(attributes, for: state)
+    }
+    
+}
+
+extension String {
+    func APIgetLayover( toTime: String) -> String {
+        let dateFormatterGet = DateFormatter()
+        dateFormatterGet.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatterGet.dateFormat = "yyyy-MM-dd H:mm:ss"
+        let fromTT = dateFormatterGet.date(from: self)
+        let TOtim = dateFormatterGet.date(from: toTime)
+        let layover = fromTT?.offsetFrom(date: TOtim!) ?? ""
+        return layover
+    }
+}
+extension String{
+    func APITimeFormat(dateFormat: String,formatTim: String) -> String{
+        var fromtime = ""
+        let dateFormatterGet = DateFormatter()
+        dateFormatterGet.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatterGet.dateFormat = dateFormat
+        if let datee = dateFormatterGet.date(from: self){
+            fromtime = Date.getFormattedDate(date: datee, format: formatTim)
+            return fromtime
+        }
+        return fromtime
+    }
+    
+//    func APIgetTime(formatTim: String) -> String{
+//        let dateFormatterGet = DateFormatter()
+//        dateFormatterGet.locale = Locale(identifier: "en_US_POSIX")
+//        dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+//        let datee = dateFormatterGet.date(from: self)
+//        let fromtime = Date.getFormattedDate(date: datee!, format: formatTim)
+//        return fromtime
+//    }
+}
+extension Date {
+    func toLocalTime() -> Date {
+        
+        let timezone = TimeZone.current
+        
+        let seconds = TimeInterval(timezone.secondsFromGMT(for: self))
+        
+        return Date(timeInterval: seconds, since: self)
+        
+    }
+    
+    // Convert local time to UTC (or GMT)
+    
+    func toGlobalTime() -> Date {
+        
+        let timezone = TimeZone.current
+        
+        let seconds = -TimeInterval(timezone.secondsFromGMT(for: self))
+        
+        return Date(timeInterval: seconds, since: self)
+        
+    }
+    static func getFormattedDate(date: Date, format: String) -> String {
+        let dateformat = DateFormatter()
+        dateformat.dateFormat = format
+        return dateformat.string(from: date)
+    }
+    
+}
+extension UIImageView {
+   
+    func load(url: String) {
+        guard let imageURL = URL(string: url.replacingOccurrences(of: " ", with: "%20")) else{return}
+        DispatchQueue.global().async { [weak self] in
+            if let data = try? Data(contentsOf: imageURL) {
+                if let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self?.image = image
+                    }
+                }else{
+                    DispatchQueue.main.async {
+                        self?.image = UIImage(named: "SG")
+                    }
+                }
+            }
+        }
+    }
+    func loadImageWithCash(url: String) {
+        let imageCash = NSCache<AnyObject,UIImage>()
+        guard let imageURL = URL(string: url.replacingOccurrences(of: " ", with: "%20")) else{return}
+        self.image = UIImage(named: "SG")
+        if let cashImage = imageCash.object(forKey: url as AnyObject){
+            self.image = cashImage
+        }
+        DispatchQueue.global().async { [weak self] in
+            if let data = try? Data(contentsOf: imageURL) {
+                if let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        imageCash.setObject(image, forKey: url as AnyObject)
+                        self?.image = image
+                    }
+                }else{
+                    self?.image = UIImage(named: "SG")
+                }
+            }
+        }
+    }
+}
+
+extension Date {
+
+    func offsetFrom(date: Date) -> String {
+
+        let dayHourMinuteSecond: Set<Calendar.Component> = [.day, .hour, .minute, .second]
+        let difference = NSCalendar.current.dateComponents(dayHourMinuteSecond, from: date, to: self)
+
+       // let seconds = "\(difference.second ?? 0)s"
+        let minutes = "\(difference.minute ?? 0)m" // + " " + seconds
+        let hours = "\(difference.hour ?? 0)h" + " " + minutes
+        let days = "\(difference.day ?? 0)d" + " " + hours
+
+        if let day = difference.day, day          > 0 { return days }
+        if let hour = difference.hour, hour       > 0 { return hours }
+        if let minute = difference.minute, minute > 0 { return minutes }
+        //if let second = difference.second, second > 0 { return seconds }
+        return ""
+    }
+
+}
+extension String{
+    func timeConversion12() -> String {
+        let dateAsString = self
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.dateFormat = "HH:mm"
+        let date = df.date(from: dateAsString)
+        df.dateFormat = "hh:mm a"
+        let time12 = df.string(from: date!)
+        return time12
+    }
+}
+
+extension String {
+    func strikeThrough() -> NSAttributedString {
+        let attributeString =  NSMutableAttributedString(string: self)
+        attributeString.addAttribute(
+            NSAttributedString.Key.strikethroughStyle,
+               value: NSUnderlineStyle.single.rawValue,
+                   range:NSMakeRange(0,attributeString.length))
+        return attributeString
+    }
+}
+extension String {
+    var digits: String {
+        return components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .joined()
+    }
+}
+extension String {
+    func toDouble() -> Double? {
+        return NumberFormatter().number(from: self)?.doubleValue
+    }
+}
+
+/// Tableview Empty Cell Style
+extension UITableView {
+
+    func setEmptyMessage(_ message: String) {
+        let messageLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.bounds.size.width, height: self.bounds.size.height))
+        messageLabel.text = message
+        messageLabel.textColor = .black
+        messageLabel.numberOfLines = 0
+        messageLabel.textAlignment = .center
+        messageLabel.font = UIFont(name: "TrebuchetMS", size: 15)
+        messageLabel.sizeToFit()
+
+        self.backgroundView = messageLabel
+        self.separatorStyle = .none
+    }
+
+    func restore() {
+        self.backgroundView = nil
+        self.separatorStyle = .singleLine
+    }
+}
+
+// 23,334,323  Price Coma format
+extension Int {
+    private static var numberFormatter: NumberFormatter = {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .decimal
+
+        return numberFormatter
+    }()
+
+    var delimiter: String {
+        return Int.numberFormatter.string(from: NSNumber(value: self)) ?? ""
+    }
+    
+}
+extension UITextField {
+   // USE  
+//    if let myImage = UIImage(named: "nonrefund"){
+//        amountReqtxt.withImage(direction: .Right, image: myImage, colorSeparator: UIColor.orange, colorBorder: UIColor.black)
+//    }
+
+enum Direction {
+    case Left
+    case Right
+}
+
+// add image to textfield
+func withImage(direction: Direction, image: UIImage, colorSeparator: UIColor, colorBorder: UIColor){
+    let mainView = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 45))
+    mainView.layer.cornerRadius = 5
+
+    let view = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 45))
+    view.backgroundColor = .white
+    view.clipsToBounds = true
+    view.layer.cornerRadius = 5
+    view.layer.borderWidth = CGFloat(0.5)
+    view.layer.borderColor = colorBorder.cgColor
+    mainView.addSubview(view)
+
+    let imageView = UIImageView(image: image)
+    imageView.contentMode = .scaleAspectFit
+    imageView.frame = CGRect(x: 12.0, y: 10.0, width: 24.0, height: 24.0)
+    view.addSubview(imageView)
+
+    let seperatorView = UIView()
+    seperatorView.backgroundColor = colorSeparator
+    mainView.addSubview(seperatorView)
+
+    if(Direction.Left == direction){ // image left
+        seperatorView.frame = CGRect(x: 45, y: 0, width: 5, height: 45)
+        self.leftViewMode = .always
+        self.leftView = mainView
+    } else { // image right
+        seperatorView.frame = CGRect(x: 0, y: 0, width: 5, height: 45)
+        self.rightViewMode = .always
+        self.rightView = mainView
+    }
+
+    self.layer.borderColor = colorBorder.cgColor
+    self.layer.borderWidth = CGFloat(0.5)
+    self.layer.cornerRadius = 5
+}
+
+}
+extension UIView {
+    
+    func anchor (top: NSLayoutYAxisAnchor?, left: NSLayoutXAxisAnchor?, bottom: NSLayoutYAxisAnchor?, right: NSLayoutXAxisAnchor?,  paddingTop: CGFloat, paddingLeft: CGFloat, paddingBottom: CGFloat, paddingRight: CGFloat, width: CGFloat, height: CGFloat, enableInsets: Bool) {
+        var topInset = CGFloat(0)
+        var bottomInset = CGFloat(0)
+        
+        if #available(iOS 11, *), enableInsets {
+            let insets = self.safeAreaInsets
+            topInset = insets.top
+            bottomInset = insets.bottom
+            
+            print("Top: \(topInset)")
+            print("bottom: \(bottomInset)")
+        }
+        
+        translatesAutoresizingMaskIntoConstraints = false
+        
+        if let top = top {
+            self.topAnchor.constraint(equalTo: top, constant: paddingTop+topInset).isActive = true
+        }
+        if let left = left {
+            self.leftAnchor.constraint(equalTo: left, constant: paddingLeft).isActive = true
+        }
+        if let right = right {
+            rightAnchor.constraint(equalTo: right, constant: -paddingRight).isActive = true
+        }
+        if let bottom = bottom {
+            bottomAnchor.constraint(equalTo: bottom, constant: -paddingBottom-bottomInset).isActive = true
+        }
+        if height != 0 {
+            heightAnchor.constraint(equalToConstant: height).isActive = true
+        }
+        if width != 0 {
+            widthAnchor.constraint(equalToConstant: width).isActive = true
+        }
+        
+    }
+    
+}
+extension UITextView: UITextViewDelegate {
+    //textField.returnKeyType = UIReturnKeyType.Done
+    public func textViewDidChange(_ textView: UITextView) {
+        if text.last == "\n" { //Check if last char is newline
+            text.removeLast() //Remove newline
+            textView.resignFirstResponder() //Dismiss keyboard
+        }
+    }
+}
+
+extension UITextField{
+    @IBInspectable var doneAccessory: Bool{
+        get{
+            return self.doneAccessory
+        }
+        set (hasDone) {
+            if hasDone{
+                addDoneButtonOnKeyboard()
+            }
+        }
+    }
+
+    func addDoneButtonOnKeyboard()
+    {
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        doneToolbar.barStyle = .default
+
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(self.doneButtonAction))
+
+        let items = [flexSpace, done]
+        doneToolbar.items = items
+        doneToolbar.sizeToFit()
+
+        self.inputAccessoryView = doneToolbar
+    }
+
+    @objc func doneButtonAction()
+    {
+        self.resignFirstResponder()
+    }
+}
+extension String{
+    func isValidEmail() -> Bool {
+        print("validate emilId: \(self)")
+        let emailRegEx = "^(?:(?:(?:(?: )*(?:(?:(?:\\t| )*\\r\\n)?(?:\\t| )+))+(?: )*)|(?: )+)?(?:(?:(?:[-A-Za-z0-9!#$%&’*+/=?^_'{|}~]+(?:\\.[-A-Za-z0-9!#$%&’*+/=?^_'{|}~]+)*)|(?:\"(?:(?:(?:(?: )*(?:(?:[!#-Z^-~]|\\[|\\])|(?:\\\\(?:\\t|[ -~]))))+(?: )*)|(?: )+)\"))(?:@)(?:(?:(?:[A-Za-z0-9](?:[-A-Za-z0-9]{0,61}[A-Za-z0-9])?)(?:\\.[A-Za-z0-9](?:[-A-Za-z0-9]{0,61}[A-Za-z0-9])?)*)|(?:\\[(?:(?:(?:(?:(?:[0-9]|(?:[1-9][0-9])|(?:1[0-9][0-9])|(?:2[0-4][0-9])|(?:25[0-5]))\\.){3}(?:[0-9]|(?:[1-9][0-9])|(?:1[0-9][0-9])|(?:2[0-4][0-9])|(?:25[0-5]))))|(?:(?:(?: )*[!-Z^-~])*(?: )*)|(?:[Vv][0-9A-Fa-f]+\\.[-A-Za-z0-9._~!$&'()*+,;=:]+))\\])))(?:(?:(?:(?: )*(?:(?:(?:\\t| )*\\r\\n)?(?:\\t| )+))+(?: )*)|(?: )+)?$"
+        let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        let result = emailTest.evaluate(with: self)
+        return result
+    }
+}
+
+
+extension UIViewController {
+    func hideKeyboardWhenTappedAround() {
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+    }
+}
+
+extension Double {
+    func rounded(digits: Int) -> Double {
+        let multiplier = pow(10.0, Double(digits))
+        return (self * multiplier).rounded() / multiplier
+    }
+}
+extension String {
+    var localized: String {
+        return NSLocalizedString(self, tableName: nil, bundle: Bundle.main, value: "", comment: "")
+    }
+    func localized(withComment:String) -> String {
+        return NSLocalizedString(self, tableName: nil, bundle: Bundle.main, value: "", comment: withComment)
+    }
+}
