@@ -1,0 +1,10 @@
+// BD Phone Number Validation 
+
+extension String {
+    var isValidPhone: Bool {
+        let phoneRegex = "^(\\+88|0088)?01[13-9]\\d{8}$"
+        let phoneTest = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
+           let isValidPhone = phoneTest.evaluate(with: self)
+           return isValidPhone
+       }
+}
