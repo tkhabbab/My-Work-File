@@ -1,0 +1,66 @@
+ 
+ 
+ let perams = ["first_name": fname,"last_name": lname,"image": "","birthdate": "1997-03-31"] as [String : Any]
+ 
+ 
+ 
+ func requestWithImageProfile(
+        imageData: Data?,
+        fileName: String?,
+        pathExtension: String?,
+        parameters: [String : Any],
+        completion:@escaping (Any?) -> Void,
+        failure: @escaping (Error?) -> Void) {
+        SVProgressHUD.show()
+        let headers: HTTPHeaders = [
+            "Authorization": Globaldata.logintoken,
+            "X-Requested-With": "XMLHttpRequest"
+        ]
+        
+        let URL = ApiService.getProfile
+        AF.upload(multipartFormData: { multipartFormData in
+            
+            for (key, value) in parameters {
+                if let temp = value as? String {
+                    multipartFormData.append(temp.data(using: .utf8)!, withName: key)
+                }
+                if let temp = value as? Int {
+                    multipartFormData.append("\(temp)".data(using: .utf8)!, withName: key)
+                }
+                if let temp = value as? NSArray {
+                    temp.forEach({ element in
+                        let keyObj = key + "[]"
+                        if let string = element as? String {
+                            multipartFormData.append(string.data(using: .utf8)!, withName: keyObj)
+                        } else
+                        if let num = element as? Int {
+                            let value = "\(num)"
+                            multipartFormData.append(value.data(using: .utf8)!, withName: keyObj)
+                        }
+                    })
+                }
+            }
+            
+            if let data = imageData{
+                multipartFormData.append(data, withName: "image", fileName: "\(Date.init().timeIntervalSince1970).png", mimeType: "image/png")
+            }
+        },
+        to: URL, method: .put , headers: headers)
+        .responseJSON(completionHandler: { (response) in
+            
+            print(response)
+            
+            if let err = response.error{
+                return
+            }
+            print("Succesfully uploaded")
+            SVProgressHUD.dismiss()
+            let json = response.data
+            
+            if (json != nil)
+            {
+                let jsonObject = JSON(json!)
+                print(jsonObject)
+            }
+        })
+    }
