@@ -1,0 +1,53 @@
+ For uploadong multiple images like images[] and json array  using Alamofire 
+ ["beds": 3, "max_child": 0, "check_in": 02:11, "bedroom": 2, "property_type_id": 2, "location": {
+    lat = 0;
+    lng = 0;
+}, "price": 20000, "title": The image, "check_out": 02:11, "description": this is no one, "max_infant": 0, "place_type": Shared Room, "images": <__NSArrayI 0x6000001cc340>(
+tt,
+ttt
+)
+, "max_guest": 0, "address": , , Cumilla, , Chittagong, , Bangladesh, "bathroom": 0]
+
+ 
+ 
+ 
+ 
+ 
+ func createListingwithImage(
+        imageData: [Data],
+        parameters: [String : Any],
+        completion:@escaping (Any?) -> Void,
+        failure: @escaping (Error?) -> Void) {
+        SVProgressHUD.show()
+        let headers: HTTPHeaders = [
+            "Authorization": Globaldata.logintoken,
+            "X-Requested-With": "XMLHttpRequest"
+        ]
+        
+        let URL = ApiService.createlistingList
+        AF.upload(multipartFormData: { multipartFormData in
+            
+            for (key, value) in parameters {
+                if let val = value as? Parameters {
+                    for (key1, value) in val {
+                        multipartFormData.append("\(value)".data(using: String.Encoding.utf8)!, withName: "\(key)[\(key1)]" as String)
+                    }
+                    for imageData in imageData {
+                        multipartFormData.append(imageData, withName: "images[]", fileName: "\(Date().timeIntervalSince1970).jpeg", mimeType: "image/jpeg")
+                    }
+                } else {
+                    multipartFormData.append("\(value)".data(using: String.Encoding.utf8)!, withName: key as String)
+                }
+            }
+        },
+        to: URL, method: .post , headers: headers)
+        .responseJSON(completionHandler: { (response) in
+            SVProgressHUD.dismiss()
+            switch response.result{
+            case .success(let value):
+                print("Json: \(value)")
+            case .failure(let error):
+                print("Error: \(error.localizedDescription)")
+            }
+        })
+    }
