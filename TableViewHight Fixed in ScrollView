@@ -1,0 +1,25 @@
+   @IBOutlet weak var statusTable: UITableView!
+   @IBOutlet weak var tableHight: NSLayoutConstraint!    
+    
+    
+    override func viewWillAppear(_ animated: Bool) {
+        self.statusTable.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
+        self.statusTable.reloadData()
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        self.statusTable.removeObserver(self, forKeyPath: "contentSize")
+    }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?){
+            if(keyPath == "contentSize"){
+                if let tbl = object as? UITableView
+                {
+                    if tbl == self.statusTable
+                    {
+                        if let newvalue = change?[.newKey] {
+                            let newsize  = newvalue as! CGSize
+                            self.tableHight.constant = newsize.height
+                        }
+                    }
+                }
+            }
+        }
